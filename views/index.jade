@@ -1,0 +1,94 @@
+extends layout
+
+block content
+  h1 Live Bitcoin Rates
+  ul
+    li
+      div#container
+        p#messages
+      script(src='/socket.io/socket.io.js')
+      script.
+        var socket = io.connect('http://localhost:3000')
+
+        socket.on('news', function (data) {
+          var li = document.createElement('p')
+            , text = document.createTextNode('News: ' + data.msg + ' (' + data.count + ')' )
+
+          li.appendChild(text)
+          document.getElementById('messages').appendChild(li)
+        })
+
+        socket.on('private', function (data) {
+          var li = document.createElement('p')
+            , text = document.createTextNode('Private: ' + data.msg)
+
+          li.appendChild(text)
+          document.getElementById('messages').appendChild(li)
+
+          socket.emit('private', {msg: 'Thank you for your message'})
+        })
+    li
+      div#container
+        p#gdax
+      script.
+        var cryptoC = new WebSocket('wss://ws-feed.gdax.com');
+        var message = JSON.stringify({
+          "type": "subscribe",
+          "product_ids": ["BTC-USD"],
+          "channels": ["ticker"]
+        })
+        cryptoC.onopen = () => cryptoC.send(message)
+
+        cryptoC.onmessage = function(message) {
+          var msg = JSON.parse(message.data);
+                    //- console.log(msg)
+
+          document.getElementById('gdax').innerText = "Gdax: " + msg.price;
+        };
+    li
+      div#container
+        p#crypt
+      script.
+        var crypto1 = new WebSocket('wss://real.okcoin.com:10440/websocket');
+        var messa = JSON.stringify({
+          'event':'addChannel',
+          'channel':'ok_sub_spot_btc_usd_ticker',
+        })
+        crypto1.onopen = () => crypto1.send(messa)
+
+        crypto1.onmessage = function(messa) {
+          var msg = JSON.parse(messa.data);
+          for(key in msg){
+          document.getElementById('crypt').innerText = "OKCoin: " + msg[key].data.sell;
+          }
+          
+        };
+    li
+      div#container
+        p#bitfinnex
+      script.
+        var bitf = new WebSocket('wss://api.bitfinex.com/ws/2');
+        var mes = JSON.stringify({ 
+          event: 'subscribe', 
+          channel: 'ticker',
+          pair: 'BTCUSD' 
+        })  
+        bitf.onopen = () => bitf.send(mes)
+
+        bitf.onmessage = function(mes) {
+          var msg = JSON.parse(mes.data);
+          var hb = msg[1];
+          if(hb != "hb"){
+          document.getElementById('bitfinnex').innerText = "Bitfinnex: " + msg[1][6];
+          }
+          
+        };
+
+    
+
+        
+      
+
+          
+        
+        
